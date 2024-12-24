@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Connectify: Automate your connection requests, expand your network.",
+    "name": "AutoConnect: Automate your connection requests, expand your network.",
     "version": "1.0",
     "description": "Automates actions on LinkedIn and Twitter",
     "permissions": [
@@ -29,7 +29,8 @@
       "matches": ["*://*.linkedin.com/*", "*://*.x.com/*", "*://*.twitter.com/*"]
     }],
     "action": {
-      "default_popup": "popup.html"
+      "default_popup": "popup.html",
+      "default_icon": "logo.png"
     },
     "host_permissions": [
       "*://*.linkedin.com/search/results/people/*",
@@ -37,5 +38,8 @@
       "*://*.linkedin.com/mynetwork/*",
       "*://*.x.com/i/connect_people/*",
       "*://*.twitter.com/i/connect_people/*"
-    ]
+    ],
+    "icons": {
+        "48": "logo.png"
+    }
 }
