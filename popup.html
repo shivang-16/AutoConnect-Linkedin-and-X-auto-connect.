@@ -3,227 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automation Control</title>
+  <title>AutoConnect</title>
   <style>
     body {
-      width: 400px;
-      padding: 15px;
+      width: 300px;
+      padding: 20px;
       font-family: Arial, sans-serif;
-      z-index: 9999;
+      background: #f5f5f5;
+    }
+    .container {
+      background: transparent;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     h1 {
-      font-size: 18px;
+      font-size: 20px;
+      margin: 0 0 15px 0;
+      color: #0077b5;
+    }
+    .instructions {
+      background: #e8f4ff;
+      padding: 12px;
+      border-radius: 6px;
       margin-bottom: 15px;
-      color: #333;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .search-link {
+      color: #0077b5;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .search-link:hover {
+      text-decoration: underline;
     }
     .controls {
-      margin-bottom: 15px;
       display: flex;
       gap: 10px;
     }
     button {
       flex: 1;
       padding: 10px;
-      color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
-      transition: background-color 0.2s;
+      font-weight: 500;
+      transition: all 0.2s;
     }
     #start {
-      background-color: #0077b5;
+      background: #0077b5;
+      color: white;
     }
     #start:hover {
-      background-color: #006097;
+      background: #006097;
+    }
+    #start:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
     #stop {
-      background-color: #dc3545;
+      background: #dc3545;
+      color: white;
       display: none;
     }
     #stop:hover {
-      background-color: #c82333;
+      background: #c82333;
     }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    #log-container {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
+    #status {
       margin-top: 15px;
-      background-color: #f8f9fa;
-      font-family: monospace;
-      font-size: 12px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
     }
-    .log-entry {
-      margin: 5px 0;
-      padding: 2px 0;
-      border-bottom: 1px solid #eee;
-    }
-    #stats {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #e8f4ff;
-      border-radius: 4px;
-      display: none;
-    }
-    .stat-item {
-      margin: 5px 0;
-      font-weight: bold;
+    .stat {
+      margin-top: 10px;
+      text-align: center;
+      font-weight: 500;
+      color: #0077b5;
     }
   </style>
 </head>
 <body>
-  <h1>LinkedIn Automation</h1>
-  <div class="controls">
-    <button id="start">Start Automation</button>
-    <button id="stop">Stop</button>
+  <div class="container">
+    <h1>AutoConnect</h1>
+    
+    <div class="instructions">
+      1. To use extension, you need to be logged into LinkedIn or X (formerly Twitter) <br>
+      2. Visit <a href="https://www.linkedin.com/search/results/people/" class="search-link" target="_blank">LinkedIn People Search</a> <br>
+      3. Visit <a href="https://x.com/i/connect_people" class="search-link" target="_blank">X Connect People</a> 
+    </div>
+
   </div>
-  <div id="stats">
-    <div class="stat-item">Total Invites Sent: <span id="invites-count">0</span></div>
-    <div class="stat-item">Current Page: <span id="current-page">-</span></div>
-    <div class="stat-item">Status: <span id="status">Ready</span></div>
-  </div>
-  <div id="log-container"></div>
 
   <script>
-    console.log('Popup script loaded');
-    const logContainer = document.getElementById('log-container');
-    const statsDiv = document.getElementById('stats');
+    const statusDiv = document.getElementById('status');
     const invitesCount = document.getElementById('invites-count');
-    const currentPage = document.getElementById('current-page');
-    const statusSpan = document.getElementById('status');
-    const startButton = document.getElementById('start');
-    const stopButton = document.getElementById('stop');
-    let pageCounter = 1;
 
-    function addLog(message) {
-      const logEntry = document.createElement('div');
-      logEntry.className = 'log-entry';
-      logEntry.textContent = message;
-      logContainer.appendChild(logEntry);
-      logContainer.scrollTop = logContainer.scrollHeight;
-    }
+    // Open LinkedIn search page when clicking the link
+    document.querySelector('.search-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: 'https://www.linkedin.com/search/results/people/' });
+    });
 
-    function updateStats(totalInvites) {
-      statsDiv.style.display = 'block';
-      invitesCount.textContent = totalInvites;
-    }
-
-    function resetUI() {
-      startButton.disabled = false;
-      startButton.textContent = 'Start Automation';
-      startButton.style.display = 'block';
-      stopButton.style.display = 'none';
-      statusSpan.textContent = 'Ready';
-    }
-
-    // Listen for messages from the content script
+    // Listen for messages
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'log') {
-        addLog(message.text);
-      } else if (message.type === 'stats') {
-        updateStats(message.totalInvites);
-      } else if (message.type === 'nextPage') {
-        pageCounter++;
-        currentPage.textContent = pageCounter;
+      if (message.type === 'stats') {
+        invitesCount.textContent = message.totalInvites;
       } else if (message.type === 'status') {
-        statusSpan.textContent = message.text;
-        if (message.text === 'Completed' || message.text === 'Stopped') {
-          resetUI();
-        }
+        statusDiv.textContent = message.text;
       }
-    });
-
-    stopButton.addEventListener("click", function() {
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError);
-          addLog("❌ Error: " + chrome.runtime.lastError.message);
-          return;
-        }
-        chrome.tabs.sendMessage(tabs[0].id, { command: 'stop' }, function(response) {
-          if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
-            addLog("❌ Error: " + chrome.runtime.lastError.message);
-          }
-        });
-        addLog("🛑 Stopping automation...");
-        statusSpan.textContent = 'Stopping...';
-      });
-    });
-
-    startButton.addEventListener("click", function() {
-      console.log('Start button clicked');
-      this.disabled = true;
-      this.textContent = 'Running...';
-      this.style.display = 'none';
-      stopButton.style.display = 'block';
-      statusSpan.textContent = 'Running';
-      statsDiv.style.display = 'block';
-      pageCounter = 1;
-      currentPage.textContent = pageCounter;
-      logContainer.innerHTML = ''; // Clear previous logs
-      addLog("🔄 Starting automation...");
-      
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError);
-          addLog("❌ Error: " + chrome.runtime.lastError.message);
-          resetUI();
-          return;
-        }
-
-        const currentUrl = tabs[0].url;
-        if (currentUrl.includes("linkedin.com")) {
-          addLog("✅ LinkedIn page detected");
-          // First inject the script
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['linkedin.js']
-          }).then(() => {
-            addLog("✅ Script injected successfully");
-            // Then send the start command
-            chrome.tabs.sendMessage(tabs[0].id, { command: 'start' }, function(response) {
-              if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError);
-                addLog("❌ Error: " + chrome.runtime.lastError.message);
-                resetUI();
-              }
-            });
-          }).catch(error => {
-            console.error(error);
-            addLog("❌ Error injecting script: " + error.message);
-            resetUI();
-          });
-        } else if (currentUrl.includes("x.com")) {
-          addLog("✅ Twitter page detected");
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['twitter.js']
-          }).then(() => {
-            addLog("✅ Script injected successfully");
-            chrome.tabs.sendMessage(tabs[0].id, { command: 'start' }, function(response) {
-              if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError);
-                addLog("❌ Error: " + chrome.runtime.lastError.message);
-                resetUI();
-              }
-            });
-          }).catch(error => {
-            console.error(error);
-            addLog("❌ Error injecting script: " + error.message);
-            resetUI();
-          });
-        } else {
-          addLog("❌ Please open LinkedIn or Twitter to use this automation.");
-          resetUI();
-        }
-      });
     });
   </script>
 </body>

@@ -28,7 +28,7 @@ header.style.cssText = `
 `;
 
 const title = document.createElement('h2');
-title.textContent = 'Connectify';
+title.textContent = 'AutoConnect';
 title.style.cssText = `
     color: #00a0dc;
     margin: 0;
