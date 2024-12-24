@@ -1,146 +1,144 @@
 Linkedin = {
     config: {
-      scrollDelay: 3000,
-      actionDelay: 5000,
-      nextPageDelay: 5000,
+      scrollDelay: 500,
+      actionDelay: 500,
+      nextPageDelay: 1000,
       maxRequests: -1,
       totalRequestsSent: 0,
       isRunning: false
     },
+
+    sendMessage: function(type, data) {
+      window.postMessage({ type, ...data }, '*');
+    },
+
+    log: function(message) {
+      console.log(message);
+      this.sendMessage('log', { text: message });
+    },
+
     init: function (data, config) {
-      console.info("INFO: script initialized on the page...");
-      console.debug(
-        "DEBUG: scrolling to bottom in " + config.scrollDelay + " ms"
-      );
+      this.log("Script initialized on the page");
+      this.log("Scrolling to bottom in " + config.scrollDelay + " ms");
       setTimeout(() => this.scrollBottom(data, config), config.actionDelay);
     },
+
     start: function() {
       if (this.config.isRunning) {
-        console.info("INFO: Script is already running");
+        this.log("Script is already running");
         return;
       }
-      console.info("INFO: Starting LinkedIn automation");
+      this.log("Starting LinkedIn automation");
       this.config.isRunning = true;
       this.init({}, this.config);
     },
+
     stop: function() {
-      console.info("INFO: Stopping LinkedIn automation");
+      this.log("Stopping LinkedIn automation");
       this.config.isRunning = false;
+      this.sendMessage('status', { text: 'Stopped' });
     },
+
     scrollBottom: function (data, config) {
+      if (!this.config.isRunning) return;
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-      console.debug("DEBUG: scrolling to top in " + config.scrollDelay + " ms");
+      this.log("Scrolling to bottom of page");
       setTimeout(() => this.scrollTop(data, config), config.scrollDelay);
     },
+
     scrollTop: function (data, config) {
+      if (!this.config.isRunning) return;
       window.scrollTo({ top: 0, behavior: "smooth" });
-      console.debug(
-        "DEBUG: inspecting elements in " + config.scrollDelay + " ms"
-      );
+      this.log("Scrolling to top of page");
       setTimeout(() => this.inspect(data, config), config.scrollDelay);
     },
+
     inspect: function (data, config) {
+      if (!this.config.isRunning) return;
       var totalRows = this.totalRows();
-      console.debug("DEBUG: total search results found on page are " + totalRows);
+      this.log("Found " + totalRows + " search results");
+      
       if (totalRows >= 0) {
         this.compile(data, config);
       } else {
-        console.warn("WARN: end of search results!");
+        this.log("No more search results found");
         this.complete(config);
       }
     },
+
     compile: function (data, config) {
+      if (!this.config.isRunning) return;
       var elements = document.querySelectorAll("button");
       data.pageButtons = [...elements].filter(function (element) {
         return element.textContent.trim() === "Connect";
       });
+
       if (!data.pageButtons || data.pageButtons.length === 0) {
-        console.warn("ERROR: no connect buttons found on page!");
-        console.info("INFO: moving to next page...");
+        this.log("No connect buttons found on page");
         setTimeout(() => {
           this.nextPage(config);
         }, config.nextPageDelay);
       } else {
         data.pageButtonTotal = data.pageButtons.length;
-        console.info("INFO: " + data.pageButtonTotal + " connect buttons found");
+        this.log(data.pageButtonTotal + " connect buttons found");
         data.pageButtonIndex = 0;
-        console.debug(
-          "DEBUG: starting to send invites in " + config.actionDelay + " ms"
-        );
         setTimeout(() => {
           this.sendInvites(data, config);
         }, config.actionDelay);
       }
     },
+
     sendInvites: function (data, config) {
-      console.debug("remaining requests " + config.maxRequests);
+      if (!this.config.isRunning) return;
       if (config.maxRequests == 0) {
-        console.info("INFO: max requests reached for the script run!");
+        this.log("Max requests reached");
         this.complete(config);
-      } else {
-        console.debug(
-          "DEBUG: sending invite to " +
-            (data.pageButtonIndex + 1) +
-            " out of " +
-            data.pageButtonTotal
-        );
-        var button = data.pageButtons[data.pageButtonIndex];
-        button.click();
-        console.debug(
-          "DEBUG: clicking send in popup, if present, in " +
-            config.actionDelay +
-            " ms"
-        );
-        setTimeout(() => this.clickDone(data, config), config.actionDelay);
+        return;
       }
+
+      this.log("Sending invite " + (data.pageButtonIndex + 1) + " of " + data.pageButtonTotal);
+      var button = data.pageButtons[data.pageButtonIndex];
+      button.click();
+      setTimeout(() => this.clickDone(data, config), config.actionDelay);
     },
+
     clickDone: function (data, config) {
+      if (!this.config.isRunning) return;
       var buttons = document.querySelectorAll("button");
       var doneButton = Array.prototype.filter.call(buttons, function (el) {
         return el.textContent.trim() === "Send without a note";
       });
-      // Click the first send button
+
       if (doneButton && doneButton[0]) {
-        console.debug("DEBUG: clicking send button to close popup");
+        this.log("Clicking send button");
         doneButton[0].click();
-      } else {
-        console.debug(
-          "DEBUG: send button not found, clicking close on the popup in " +
-            config.actionDelay
-        );
       }
       setTimeout(() => this.clickClose(data, config), config.actionDelay);
     },
+
     clickClose: function (data, config) {
+      if (!this.config.isRunning) return;
       var closeButton = document.getElementsByClassName(
         "artdeco-modal__dismiss artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view"
       );
       if (closeButton && closeButton[0]) {
         closeButton[0].click();
       }
-      console.info(
-        "INFO: invite sent to " +
-          (data.pageButtonIndex + 1) +
-          " out of " +
-          data.pageButtonTotal
-      );
+
       config.maxRequests--;
       config.totalRequestsSent++;
+      this.sendMessage('stats', { totalInvites: config.totalRequestsSent });
+      this.log("Total invites sent: " + config.totalRequestsSent);
+
       if (data.pageButtonIndex === data.pageButtonTotal - 1) {
-        console.debug(
-          "DEBUG: all connections for the page done, going to next page in " +
-            config.actionDelay +
-            " ms"
-        );
+        this.log("All connections for this page done");
         setTimeout(() => this.nextPage(config), config.actionDelay);
       } else {
         data.pageButtonIndex++;
-        console.debug(
-          "DEBUG: sending next invite in " + config.actionDelay + " ms"
-        );
         setTimeout(() => this.sendInvites(data, config), config.actionDelay);
       }
     },
+
     nextPage: function (config) {
       if (!this.config.isRunning) return;
       
@@ -152,21 +150,20 @@ Linkedin = {
         pagerButton.length === 0 ||
         pagerButton[0].hasAttribute("disabled")
       ) {
-        console.info("INFO: no next page button found!");
+        this.log("No next page available");
         return this.complete(config);
       }
-      console.info("INFO: Going to next page...");
+      this.log("Moving to next page");
       pagerButton[0].click();
       setTimeout(() => this.init({}, config), config.nextPageDelay);
     },
+
     complete: function (config) {
       this.config.isRunning = false;
-      console.info(
-        "INFO: script completed after sending " +
-          config.totalRequestsSent +
-          " connection requests"
-      );
+      this.log("Automation completed - Total invites sent: " + config.totalRequestsSent);
+      this.sendMessage('status', { text: 'Completed' });
     },
+
     totalRows: function () {
       var search_results = document.getElementsByClassName("search-result");
       if (search_results && search_results.length != 0) {
@@ -175,7 +172,7 @@ Linkedin = {
         return 0;
       }
     },
-  };
+};
 
 // Listen for window messages
 window.addEventListener('message', function(event) {
