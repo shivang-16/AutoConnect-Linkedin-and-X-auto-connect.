@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "Connectify: Automate your connection requests, expand your network.",
+    "version": "1.0",
+    "description": "Automates actions on LinkedIn and Twitter",
+    "permissions": [
+      "activeTab",
+      "storage",
+      "scripting"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*.linkedin.com/*", "*://*.x.com/*"],
+        "js": ["content.js"],
+        "css": []
+      }
+    ],
+    "web_accessible_resources": [{
+      "resources": ["linkedin.js", "twitter.js"],
+      "matches": ["*://*.linkedin.com/*", "*://*.x.com/*"]
+    }],
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "host_permissions": [
+      "*://*.linkedin.com/*",
+      "*://*.x.com/*"
+    ]
+  }
