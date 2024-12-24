@@ -15,6 +15,7 @@ panel.style.cssText = `
     z-index: 9999;
     font-family: Arial, sans-serif;
     border-radius: 8px;
+    overflow-y: auto;
 `;
 
 // Create header with close button
@@ -66,11 +67,50 @@ stats.innerHTML = `
 `;
 panel.appendChild(stats);
 
+// Create settings section
+const settings = document.createElement('div');
+settings.style.cssText = `
+    background: #242424;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+`;
+
+// Delay settings
+const delaySettings = document.createElement('div');
+delaySettings.style.cssText = 'margin-bottom: 15px;';
+delaySettings.innerHTML = `
+    <div style="margin-bottom: 10px; font-weight: bold;">Action Delay (ms)</div>
+    <div style="margin-bottom: 10px;">
+        <input type="number" id="action-delay" placeholder="Action Delay" value="500" min="100" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #666; background: #333; color: white;">
+    </div>
+`;
+
+// Note settings with enhanced styling
+const noteSettings = document.createElement('div');
+noteSettings.innerHTML = `
+    <div style="margin-bottom: 15px;">
+        <label style="display: flex; align-items: center; cursor: pointer; background: #2d2d2d; padding: 10px; border-radius: 6px; transition: background 0.3s;">
+            <input type="checkbox" id="send-note" style="margin-right: 12px; width: 18px; height: 18px; accent-color: #00a0dc;">
+            <span style="font-size: 15px; font-weight: 500;">Send with note</span>
+        </label>
+    </div>
+    <div id="note-input-container" style="display: none;">
+        <textarea id="custom-note" placeholder="Enter your custom note. Use {{name}} for recipient's name" 
+            style="width: 100%; height: 80px; margin-top: 10px; padding: 12px; border-radius: 6px; border: 2px solid #444; background: #333; color: white; resize: vertical; font-size: 14px; transition: border-color 0.3s;"
+        >Hi {{name}}, I'd like to join your professional network.</textarea>
+    </div>
+`;
+
+settings.appendChild(delaySettings);
+settings.appendChild(noteSettings);
+panel.appendChild(settings);
+
 // Create logs section
 const logs = document.createElement('div');
 logs.id = 'log-content';
 logs.style.cssText = `
-    height: calc(75vh - 250px);
+    height: 200px;
     overflow-y: auto;
     margin: 20px 0;
     padding: 10px;
@@ -81,45 +121,74 @@ logs.style.cssText = `
 `;
 panel.appendChild(logs);
 
-// Create buttons
+// Create floating controls
 const controls = document.createElement('div');
 controls.style.cssText = `
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    padding: 15px;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    margin: 0 -10px -10px -10px;
 `;
 
 const startButton = document.createElement('button');
 startButton.textContent = 'Start';
 startButton.style.cssText = `
     flex: 1;
-    padding: 10px 20px;
+    padding: 12px 20px;
     background: #00a0dc;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: background 0.3s;
+    font-size: 15px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 `;
-startButton.onmouseover = () => startButton.style.background = '#008cc9';
-startButton.onmouseout = () => startButton.style.background = '#00a0dc';
+startButton.onmouseover = () => {
+    startButton.style.background = '#008cc9';
+    startButton.style.transform = 'translateY(-2px)';
+    startButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+};
+startButton.onmouseout = () => {
+    startButton.style.background = '#00a0dc';
+    startButton.style.transform = 'translateY(0)';
+    startButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+};
 
 const stopButton = document.createElement('button');
 stopButton.textContent = 'Stop';
 stopButton.style.cssText = `
     flex: 1;
-    padding: 10px 20px;
+    padding: 12px 20px;
     background: #dc3545;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: background 0.3s;
+    font-size: 15px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 `;
-stopButton.onmouseover = () => stopButton.style.background = '#c82333';
-stopButton.onmouseout = () => stopButton.style.background = '#dc3545';
+stopButton.onmouseover = () => {
+    stopButton.style.background = '#c82333';
+    stopButton.style.transform = 'translateY(-2px)';
+    stopButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+};
+stopButton.onmouseout = () => {
+    stopButton.style.background = '#dc3545';
+    stopButton.style.transform = 'translateY(0)';
+    stopButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+};
 
 controls.appendChild(startButton);
 controls.appendChild(stopButton);
@@ -226,12 +295,41 @@ closeButton.addEventListener('click', togglePanel);
 collapsedButton.addEventListener('click', togglePanel);
 
 // Functions to update UI
+function clearLogs() {
+    const logContent = document.getElementById('log-content');
+    logContent.innerHTML = '';
+}
+
 function addLog(message) {
     const logContent = document.getElementById('log-content');
     const logEntry = document.createElement('div');
     const timestamp = new Date().toLocaleTimeString();
-    logEntry.style.cssText = 'padding: 8px 0; border-bottom: 1px solid #333;';
-    logEntry.textContent = `[${timestamp}] ${message}`;
+    
+    // Style based on message type
+    let color = '#ffffff';
+    let icon = '';
+    if (message.includes('✅') || message.includes('🎉')) {
+        color = '#4caf50';  // Success green
+    } else if (message.includes('⚠️') || message.includes('🛑')) {
+        color = '#ff9800';  // Warning orange
+    } else if (message.includes('❌')) {
+        color = '#f44336';  // Error red
+    }
+
+    logEntry.style.cssText = `
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        font-size: 13px;
+        line-height: 1.4;
+        color: ${color};
+        transition: background 0.3s;
+    `;
+    logEntry.onmouseover = () => logEntry.style.background = 'rgba(255, 255, 255, 0.1)';
+    logEntry.onmouseout = () => logEntry.style.background = 'rgba(255, 255, 255, 0.05)';
+    
+    logEntry.textContent = `${message}`;
     logContent.appendChild(logEntry);
     logContent.scrollTop = logContent.scrollHeight;
 }
@@ -248,15 +346,31 @@ function updateStatus(status) {
 
 // Event listeners
 startButton.addEventListener('click', () => {
-    window.postMessage({ command: 'start' }, '*');
+    clearLogs();
+    const config = {
+        scrollDelay: 500,
+        actionDelay: parseInt(document.getElementById('action-delay').value),
+        nextPageDelay: 1000,
+        sendNote: document.getElementById('send-note').checked,
+        note: document.getElementById('custom-note').value
+    };
+    window.postMessage({ command: 'start', config }, '*');
     updateStatus('Running');
-    addLog('Starting automation...');
+    addLog('🚀 Starting automation...');
 });
 
 stopButton.addEventListener('click', () => {
     window.postMessage({ command: 'stop' }, '*');
     updateStatus('Stopped');
-    addLog('Stopping automation...');
+    const totalInvites = document.getElementById('total-invites').textContent;
+    clearLogs();
+    addLog('🛑 Automation stopped');
+    addLog(`📊 ${totalInvites}`);
+});
+
+// Add note checkbox handler
+document.getElementById('send-note').addEventListener('change', (e) => {
+    document.getElementById('note-input-container').style.display = e.target.checked ? 'block' : 'none';
 });
 
 // Listen for messages
