@@ -82,7 +82,7 @@ delaySettings.style.cssText = 'margin-bottom: 15px;';
 delaySettings.innerHTML = `
     <div style="margin-bottom: 10px; font-weight: bold;">Action Delay (ms)</div>
     <div style="margin-bottom: 10px;">
-        <input type="number" id="action-delay" placeholder="Action Delay" value="500" min="100" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #666; background: #333; color: white;">
+        <input type="number" id="action-delay" placeholder="Action Delay" value="1000" min="100" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #666; background: #333; color: white;">
     </div>
 `;
 
@@ -376,7 +376,7 @@ document.getElementById('send-note').addEventListener('change', (e) => {
 // Listen for messages
 window.addEventListener('message', function(event) {
     if (event.source !== window) return;
-    console.log('Received message:', event.data);
+    // console.log('Received message:', event.data);
 
     if (event.data.type === 'log') {
         addLog(event.data.text);

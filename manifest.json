@@ -13,20 +13,29 @@
     },
     "content_scripts": [
       {
-        "matches": ["*://*.linkedin.com/*", "*://*.x.com/*"],
+        "matches": [
+          "*://*.linkedin.com/search/results/people/*",
+          "*://*.linkedin.com/search/results/all/*",
+          "*://*.linkedin.com/mynetwork/*",
+          "*://*.x.com/i/connect_people/*",
+          "*://*.twitter.com/i/connect_people/*"
+        ],
         "js": ["content.js"],
         "css": []
       }
     ],
     "web_accessible_resources": [{
       "resources": ["linkedin.js", "twitter.js"],
-      "matches": ["*://*.linkedin.com/*", "*://*.x.com/*"]
+      "matches": ["*://*.linkedin.com/*", "*://*.x.com/*", "*://*.twitter.com/*"]
     }],
     "action": {
       "default_popup": "popup.html"
     },
     "host_permissions": [
-      "*://*.linkedin.com/*",
-      "*://*.x.com/*"
+      "*://*.linkedin.com/search/results/people/*",
+      "*://*.linkedin.com/search/results/all/*",
+      "*://*.linkedin.com/mynetwork/*",
+      "*://*.x.com/i/connect_people/*",
+      "*://*.twitter.com/i/connect_people/*"
     ]
-  }
+}

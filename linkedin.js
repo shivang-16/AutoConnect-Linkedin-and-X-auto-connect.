@@ -1,11 +1,13 @@
 Linkedin = {
     config: {
       scrollDelay: 500,
-      actionDelay: 500,
+      actionDelay: 1000,
       nextPageDelay: 1000,
       maxRequests: -1,
       totalRequestsSent: 0,
-      isRunning: false
+      isRunning: false,
+      sendNote: false,
+      note: ""
     },
 
     sendMessage: function(type, data) {
@@ -40,9 +42,11 @@ Linkedin = {
         scrollDelay: userConfig.scrollDelay || 500,
         actionDelay: userConfig.actionDelay || 500,
         nextPageDelay: userConfig.nextPageDelay || 1000,
-        maxRequests: -1,
+        maxRequests: userConfig.maxRequests || -1,
         totalRequestsSent: 0,
-        isRunning: true
+        isRunning: true,
+        sendNote: userConfig.sendNote || false,
+        note: userConfig.note || ""
       };
       
       this.log("✨ Starting LinkedIn automation");
@@ -125,21 +129,83 @@ Linkedin = {
         return;
       }
 
+      // Get name for personalized note
+      if (config.sendNote) {
+        const nameElement = data.pageButtons[data.pageButtonIndex].closest('.entity-result__item')
+          ?.querySelector('.entity-result__title-text a');
+        data.connectNames = data.connectNames || [];
+        data.connectNames[data.pageButtonIndex] = nameElement ? 
+          nameElement.textContent.trim().split(' ')[0] : 'there';
+      }
+
       this.log("💌 Sending invitation " + (data.pageButtonIndex + 1) + " of " + data.pageButtonTotal);
       var button = data.pageButtons[data.pageButtonIndex];
       button.click();
+
+      if (config.sendNote) {
+        setTimeout(() => this.clickAddNote(data, config), this.config.actionDelay);
+      } else {
+        setTimeout(() => this.clickDone(data, config), this.config.actionDelay);
+      }
+    },
+
+    clickAddNote: function (data, config) {
+      if (!this.config.isRunning) return;
+      
+      var buttons = document.querySelectorAll("button");
+      var addNoteButton = Array.prototype.filter.call(buttons, function (el) {
+        return el.textContent.trim() === "Add a note";
+      });
+
+      if (addNoteButton && addNoteButton[0]) {
+        this.log("✏️ Adding personalized note");
+        addNoteButton[0].click();
+        setTimeout(() => this.pasteNote(data, config), this.config.actionDelay);
+      } else {
+        this.log("⚠️ Note button not found, sending without note");
+        setTimeout(() => this.clickDone(data, config), this.config.actionDelay);
+      }
+    },
+
+    pasteNote: function (data, config) {
+        console.log(data, "here is th data")
+      if (!this.config.isRunning) return;
+      
+      const noteTextBox = document.getElementById("custom-message");
+      if (noteTextBox) {
+        const note = config.note.replace(
+          "{{name}}",
+          data.connectNames[data.pageButtonIndex]
+        );
+        noteTextBox.value = note;
+        noteTextBox.dispatchEvent(
+          new Event("input", {
+            bubbles: true,
+          })
+        );
+        this.log("📝 Added note: " + note);
+      }
       setTimeout(() => this.clickDone(data, config), this.config.actionDelay);
     },
 
     clickDone: function (data, config) {
       if (!this.config.isRunning) return;
+      
       var buttons = document.querySelectorAll("button");
-      var doneButton = Array.prototype.filter.call(buttons, function (el) {
-        return el.textContent.trim() === "Send without a note";
-      });
+      var doneButton;
+      
+      if (config.sendNote) {
+        doneButton = Array.prototype.filter.call(buttons, function (el) {
+          return el.textContent.trim() === "Send";
+        });
+      } else {
+        doneButton = Array.prototype.filter.call(buttons, function (el) {
+          return el.textContent.trim() === "Send without a note";
+        });
+      }
 
       if (doneButton && doneButton[0]) {
-        this.log("📤 Sending connection request");
+        this.log(config.sendNote ? "📨 Sending with note" : "📨 Sending without note");
         doneButton[0].click();
       }
       setTimeout(() => this.clickClose(data, config), this.config.actionDelay);
