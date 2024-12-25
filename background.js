@@ -5,7 +5,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           target: { tabId: tabId },
           files: ["linkedin.js"]
         });
-      } else if (tab.url.includes("twitter.com")) {
+      } else if (tab.url.includes("x.com")) {
         chrome.scripting.executeScript({
           target: { tabId: tabId },
           files: ["twitter.js"]
