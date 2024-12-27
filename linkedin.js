@@ -200,7 +200,7 @@ Linkedin = {
         });
       } else {
         doneButton = Array.prototype.filter.call(buttons, function (el) {
-          return el.textContent.trim() === "Send without a note";
+          return el.textContent.trim() === "Send without a note" || el.textContent.trim() === "Send";
         });
       }
 
