@@ -5,7 +5,6 @@
     "description": "Automates actions on LinkedIn and Twitter",
     "permissions": [
       "activeTab",
-      "storage",
       "scripting"
     ],
     "background": {
