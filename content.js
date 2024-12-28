@@ -16,6 +16,7 @@ panel.style.cssText = `
     font-family: Arial, sans-serif;
     border-radius: 8px;
     overflow-y: auto;
+    display: none;
 `;
 
 // Create header with close button
@@ -218,9 +219,58 @@ collapsedButton.style.cssText = `
 collapsedButton.onmouseover = () => collapsedButton.style.background = '#008cc9';
 collapsedButton.onmouseout = () => collapsedButton.style.background = '#00a0dc';
 
+// Create button to open the panel when not on the search results page
+const openPanelButton = document.createElement('button');
+openPanelButton.textContent = '⚡';
+openPanelButton.style.cssText = `
+  position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #00a0dc;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: grab;
+    font-size: 24px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    z-index: 9999;
+    transition: transform 0.2s ease, background 0.3s ease;
+`;
+openPanelButton.onmouseover = () => openPanelButton.style.background = '#008cc9';
+openPanelButton.onmouseout = () => openPanelButton.style.background = '#00a0dc';
+openPanelButton.onclick = () => {
+    panel.style.display = 'block';
+    openPanelButton.style.display = 'none';
+};
+
+// Add the button to the page
+if (!window.location.href.includes('linkedin.com/search/results/people/')) {
+    document.body.appendChild(openPanelButton);
+}
+
 // Add to page
 document.body.appendChild(panel);
 document.body.appendChild(collapsedButton);
+
+console.log(window.location.href, 'here is loclation');
+// Check if the current URL matches the LinkedIn search results pattern
+if (window.location.href.includes('linkedin.com/search/results/people/')) {
+    console.log('Current URL matches LinkedIn search results pattern');
+    document.getElementById('linkedin-automation-panel').style.display = 'block'; // Show the panel
+    document.getElementById('linkedin-automation-collapsed').style.display = 'none'; // Hide the collapsed button
+} else {
+    // Show message to visit the correct URL
+    const panelContent = document.getElementById('linkedin-automation-panel');
+    panelContent.innerHTML = '<div style="text-align: center; display: flex; justify-content: center; align-items: center; height: 100%; color: #ffffff; margin-top: 0;"><div>Please visit the following link to start the script:<br><button id="visit-link-button" style="margin-top: 10px; padding: 10px 20px; background: #00a0dc; color: white; border: none; border-radius: 5px; cursor: pointer;">Go to People Search</button></div></div>';
+
+    // Add event listener to button
+    const visitButton = document.getElementById('visit-link-button');
+    visitButton.onclick = () => {
+        window.open('https://www.linkedin.com/search/results/people/');
+    };
+}
 
 // Dragging functionality
 function makeDraggable(element) {

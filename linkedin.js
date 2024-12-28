@@ -1,4 +1,4 @@
-Linkedin = {
+LinkedinAutomation = {
     config: {
       scrollDelay: 500,
       actionDelay: 1000,
@@ -200,7 +200,7 @@ Linkedin = {
         });
       } else {
         doneButton = Array.prototype.filter.call(buttons, function (el) {
-          return el.textContent.trim() === "Send without a note";
+          return el.textContent.trim() === "Send without a note" || el.textContent.trim() === "Send";
         });
       }
 
@@ -286,8 +286,8 @@ window.addEventListener('message', function(event) {
 
     const command = event.data.command;
     if (command === 'start') {
-        Linkedin.start(event.data.config);
+        LinkedinAutomation.start(event.data.config);
     } else if (command === 'stop') {
-        Linkedin.stop();
+        LinkedinAutomation.stop();
     }
 });

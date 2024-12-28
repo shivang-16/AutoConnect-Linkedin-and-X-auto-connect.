@@ -27,6 +27,7 @@ const Twitter = {
     init: function(data, config) {
       console.log('🎬 Initializing Twitter automation with config:', config);
       this.log("🚀 Starting Twitter automation...");
+      console.log('📢 Automation is about to start...');
       this.log("⚙️ Configuration: " + JSON.stringify({
         scrollDelay: config.scrollDelay,
         actionDelay: config.actionDelay,
